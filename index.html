@@ -1,0 +1,356 @@
+<!DOCTYPE html>  <html>  
+<head>  
+<meta charset="UTF-8">  
+<meta name="viewport" content="width=device-width, initial-scale=1.0">  
+<title>My Financial Tracker</title>  <style>  
+body{margin:0;font-family:Arial;background:#f2f2f2}  
+  
+/* HEADER */  
+.header{  
+  position:fixed;top:0;width:100%;height:55px;  
+  background:#1976d2;color:#fff;  
+  display:flex;align-items:center;  
+  padding:0 15px;z-index:1000  
+}  
+.hamburger{font-size:24px;cursor:pointer;margin-right:15px}  
+.title{font-size:18px;font-weight:bold}  
+  
+/* BOTTOM TABS */  
+.bottom-tabs{  
+  position:fixed;bottom:0;width:100%;  
+  display:flex;background:#fff;border-top:1px solid #ccc;z-index:1000  
+}  
+.bottom-tabs button{  
+  flex:1;padding:12px;border:none;background:none;font-size:14px  
+}  
+.bottom-tabs button.active{  
+  background:#e3f2fd;font-weight:bold  
+}  
+  
+/* CONTENT */  
+.content{padding:70px 15px 80px}  
+.tab{display:none}  
+.tab.active{display:block}  
+.card{  
+  background:#fff;padding:15px;  
+  border-radius:10px;margin-bottom:15px  
+}  
+  
+/* SIDE MENU */  
+.side-menu{  
+  position:fixed;top:0;left:-100%;  
+  width:80%;height:100%;  
+  background:#fff;z-index:2000;  
+  padding:15px;transition:.3s  
+}  
+.side-menu.open{left:0}  
+.menu-btn{width:100%;padding:12px;margin-top:10px;font-size:16px}  
+.menu-close{font-size:22px;background:none;border:none}  
+  
+/* OVERLAYS */  
+.overlay{  
+  position:fixed;top:0;left:0;  
+  width:100%;height:100%;  
+  background:#fff;z-index:3000;  
+  display:none  
+}  
+.overlay-header{  
+  position:fixed;top:0;width:100%;height:55px;  
+  background:#1976d2;color:#fff;  
+  display:flex;align-items:center;padding:0 10px  
+}  
+.home-btn{font-size:22px;background:none;border:none;color:#fff;margin-right:10px}  
+.overlay-title{font-size:18px;font-weight:bold}  
+.overlay-body{  
+  margin-top:55px;padding:15px;  
+  height:calc(100% - 55px);overflow-y:auto  
+}  
+  
+/* FLOAT BUTTON */  
+.fab{  
+  position:fixed;bottom:90px;right:20px;  
+  width:55px;height:55px;border-radius:50%;  
+  background:#1976d2;color:#fff;  
+  font-size:30px;border:none;z-index:4000  
+}  
+  
+/* ITEMS */  
+.item{  
+  background:#f5f5f5;padding:10px;  
+  border-radius:6px;margin-bottom:10px;  
+  display:flex;justify-content:space-between;align-items:center  
+}  
+.icon-btn{background:none;border:none;font-size:18px}  
+.danger{color:#d32f2f}  
+  
+/* MODAL */  
+.modal{  
+  position:fixed;top:0;left:0;  
+  width:100%;height:100%;  
+  background:rgba(0,0,0,.5);  
+  display:none;align-items:center;  
+  justify-content:center;z-index:5000  
+}  
+.modal-content{  
+  background:#fff;padding:15px;  
+  width:90%;border-radius:10px  
+}  
+.modal-content label{display:block;margin-top:10px}  
+.modal-content input,select{  
+  width:100%;padding:8px;margin-top:5px  
+}  
+.modal-content button{margin-top:10px;width:100%}  
+</style>  </head>  <body>  <div class="header">  
+  <div class="hamburger" onclick="toggleMenu()">☰</div>  
+  <div class="title">My Financial Tracker</div>  
+</div>  <div class="side-menu" id="sideMenu">  
+  <button class="menu-close" onclick="toggleMenu()">❌</button>  
+  <button class="menu-btn" onclick="openManageAccounts()">Manage Accounts</button>  
+  <button class="menu-btn" onclick="openSettings()">Settings</button>  
+</div>  <div class="content">  
+  <div class="tab active" id="home">  
+    <div class="card">  
+      <h3>Net Worth</h3>  
+      <h2 id="netWorth">₹0</h2>  
+    </div>  
+    <div class="card">  
+      <h3>Accounts</h3>  
+      <div id="homeAccounts"></div>  
+    </div>  <!-- PIE CHART -->  
+<div class="card">  
+  <h3>Accounts Distribution</h3>  
+  <canvas id="accountChart" width="300" height="300" style="max-width:100%;"></canvas>  
+</div>
+
+  </div>    <div class="tab" id="transactions">  
+    <div id="transactionList"></div>  
+    <button class="fab" onclick="openTransactionModal()">+</button>  
+  </div>    <!-- CHARTS TAB -->    <div class="tab" id="charts">  
+    <div class="card">  
+      <h3>Yearly Financial Overview</h3>  
+      <canvas id="yearlyChart" width="300" height="200" style="max-width:100%;"></canvas>  
+    </div>  
+    <div class="card">  
+      <h3>Monthly Financial Overview</h3>  
+      <label>Select Year:</label>  
+      <select id="monthYearSelect" onchange="renderMonthlyChart()"></select>  
+      <canvas id="monthlyChart" width="300" height="200" style="max-width:100%;margin-top:10px;"></canvas>  
+    </div>  
+  </div>  
+</div>  <!-- MANAGE ACCOUNTS -->  <div class="overlay" id="manageAccounts">  
+  <div class="overlay-header">  
+    <button class="home-btn" onclick="goHome()">🏠</button>  
+    <div class="overlay-title">Manage Accounts</div>  
+  </div>  
+  <div class="overlay-body" id="accountsList"></div>  
+  <button class="fab" onclick="openAccountModal()">+</button>  
+</div>  <!-- SETTINGS -->  <div class="overlay" id="settings">  
+  <div class="overlay-header">  
+    <button class="home-btn" onclick="goHome()">🏠</button>  
+    <div class="overlay-title">Settings</div>  
+  </div>  
+  <div class="overlay-body">  
+    <button class="danger" onclick="resetApp()">Reset App Data</button>  
+  </div>  
+</div>  <!-- ACCOUNT MODAL -->  <div class="modal" id="accountModal">  
+  <div class="modal-content">  
+    <h3 id="accModalTitle">Add Account</h3>  
+    <label>Name</label><input id="accName">  
+    <label>Type</label>  
+    <select id="accType"><option>Bank</option><option>Investment</option><option>Cash</option></select>  
+    <label>Amount</label><input type="number" id="accAmount">  
+    <button onclick="saveAccount()">OK</button>  
+    <button onclick="closeAccountModal()">Cancel</button>  
+  </div>  
+</div>  <!-- TRANSACTION MODAL -->  <div class="modal" id="txnModal">  
+  <div class="modal-content">  
+    <h3 id="txnTitle">Add Transaction</h3>  
+    <label>Date</label><input type="date" id="txnDate">  
+    <label>Account</label><select id="txnAccount"></select>  
+    <label>Type</label>  
+    <select id="txnType"><option>Income</option><option>Expense</option></select>  
+    <label>Amount</label><input type="number" id="txnAmount">  
+    <button onclick="saveTransaction()">OK</button>  
+    <button onclick="closeTransactionModal()">Cancel</button>  
+  </div>  
+</div>  <div class="bottom-tabs">  
+  <button class="active" onclick="showTab('home',this)">Home</button>  
+  <button onclick="showTab('transactions',this)">Transactions</button>  
+  <button onclick="showTab('charts',this)">Charts</button>  
+</div>  <script>  
+// Storage  
+let accounts = JSON.parse(localStorage.getItem("accounts")) || [];  
+let transactions = JSON.parse(localStorage.getItem("transactions")) || [];  
+let editAcc = null, editTxn = null;  
+  
+// Basic functions  
+function toggleMenu(){sideMenu.classList.toggle("open")}  
+function showTab(id,btn){  
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));  
+  document.getElementById(id).classList.add("active");  
+  document.querySelectorAll(".bottom-tabs button").forEach(b=>b.classList.remove("active"));  
+  btn.classList.add("active");  
+}  
+function goHome(){  
+  document.querySelectorAll(".overlay").forEach(o=>o.style.display="none");  
+  showTab('home',document.querySelector('.bottom-tabs button'));  
+  renderHome();  
+  renderAccountChart();  
+}  
+  
+// ===== ACCOUNTS =====  
+function openManageAccounts(){toggleMenu();manageAccounts.style.display="block";renderAccounts()}  
+function openAccountModal(){editAcc=null;accName.value="";accAmount.value="";accountModal.style.display="flex"}  
+function closeAccountModal(){accountModal.style.display="none"}  
+  
+function saveAccount() {  
+  let name = accName.value.trim();  
+  let type = accType.value;  
+  let newAmount = Number(accAmount.value);  
+  if (!name || isNaN(newAmount)) { alert("Enter valid details"); return; }  
+  let today = new Date().toISOString().slice(0, 10);  
+  
+  if(editAcc===null){  
+    accounts.push({name,type});  
+    if(newAmount!==0){  
+      transactions.push({date:today,account:name,type:newAmount>0?"Income":"Expense",amount:Math.abs(newAmount),note:"Initial Balance"});  
+    }  
+  } else {  
+    let acc = accounts[editAcc];  
+    let currentBalance = transactions.filter(t=>t.account===acc.name).reduce((sum,t)=>sum+(t.type==="Income"?t.amount:-t.amount),0);  
+    let diff = newAmount - currentBalance;  
+    acc.name=name; acc.type=type;  
+    if(diff!==0){  
+      transactions.push({date:today,account:name,type:diff>0?"Income":"Expense",amount:Math.abs(diff),note:"Manual Adjustment"});  
+    }  
+  }  
+  
+  localStorage.setItem("accounts",JSON.stringify(accounts));  
+  localStorage.setItem("transactions",JSON.stringify(transactions));  
+  
+  closeAccountModal();  
+  recalculate();  
+  renderAccounts();  
+  renderTransactions();  
+  renderHome();  
+  renderAccountChart();  
+}  
+  
+function editAccount(i){  
+  editAcc=i;  
+  accName.value=accounts[i].name;  
+  accType.value=accounts[i].type;  
+  let currentBalance = transactions.filter(t=>t.account===accounts[i].name).reduce((sum,t)=>sum+(t.type==="Income"?t.amount:-t.amount),0);  
+  accAmount.value=currentBalance;  
+  accountModal.style.display="flex";  
+}  
+  
+function deleteAccount(i){  
+  if(confirm("Delete account?")){  
+    transactions = transactions.filter(t=>t.account!==accounts[i].name);  
+    accounts.splice(i,1);  
+    localStorage.setItem("accounts",JSON.stringify(accounts));  
+    localStorage.setItem("transactions",JSON.stringify(transactions));  
+    renderAccounts(); renderTransactions(); renderHome(); renderAccountChart();  
+  }  
+}  
+  
+function renderAccounts(){  
+  accountsList.innerHTML="";  
+  accounts.forEach((a,i)=>{  
+    accountsList.innerHTML+=`<div class="item">${a.name} ₹${a.amount}<span><button class="icon-btn" onclick="editAccount(${i})">✏️</button><button class="icon-btn danger" onclick="deleteAccount(${i})">🗑️</button></span></div>`;  
+  });  
+}  
+  
+// ===== TRANSACTIONS =====  
+function openTransactionModal(){  
+  editTxn=null;  
+  txnDate.value="";txnAmount.value="";  
+  txnAccount.innerHTML=accounts.map(a=>`<option>${a.name}</option>`).join("");  
+  txnModal.style.display="flex";  
+}  
+function closeTransactionModal(){txnModal.style.display="none";}  
+function saveTransaction(){  
+  let t={date:txnDate.value,account:txnAccount.value,type:txnType.value,amount:+txnAmount.value};  
+  editTxn===null?transactions.push(t):transactions[editTxn]=t;  
+  localStorage.setItem("transactions",JSON.stringify(transactions));  
+  recalculate(); renderTransactions(); renderHome(); renderAccountChart(); closeTransactionModal();  
+}  
+function editTransaction(i){  
+  editTxn=i;  
+  let t=transactions[i];  
+  txnDate.value=t.date;  
+  txnType.value=t.type;  
+  txnAmount.value=t.amount;  
+  txnAccount.innerHTML=accounts.map(a=>`<option ${a.name===t.account?"selected":""}>${a.name}</option>`).join("");  
+  txnModal.style.display="flex";  
+}  
+function deleteTransaction(i){  
+  if(confirm("Delete transaction?")){  
+    transactions.splice(i,1);  
+    localStorage.setItem("transactions",JSON.stringify(transactions));  
+    recalculate(); renderTransactions(); renderHome(); renderAccountChart();  
+  }  
+}  
+function renderTransactions(){  
+  transactionList.innerHTML="";  
+  transactions.forEach((t,i)=>{  
+    let colorClass = t.type === "Income" ? "income" : "expense";  
+  
+    transactionList.innerHTML += `  
+      <div class="item">  
+        <span>  
+          ${t.date} | ${t.account} |  
+          <span class="${colorClass}">  
+            ${t.type} ₹${t.amount}  
+          </span>  
+        </span>  
+        <span>  
+          <button class="icon-btn" onclick="editTransaction(${i})">✏️</button>  
+          <button class="icon-btn danger" onclick="deleteTransaction(${i})">🗑️</button>  
+        </span>  
+      </div>`;  
+  });  
+}  
+  
+// ===== RECALCULATE BALANCES =====  
+function recalculate(){  
+  accounts.forEach(a=>a.amount=0);  
+  transactions.forEach(t=>{  
+    let a=accounts.find(x=>x.name===t.account);  
+    if(a) a.amount += (t.type==="Income"?t.amount:-t.amount);  
+  });  
+  localStorage.setItem("accounts",JSON.stringify(accounts));  
+}  
+  
+// ===== HOME RENDER (GROUPED BY CATEGORY) =====  
+function renderHome() {  
+  homeAccounts.innerHTML = "";  
+  let total = 0;  
+  let grouped = {};  
+  accounts.forEach(a => {  
+    total += a.amount;  
+    if(!grouped[a.type]) grouped[a.type]=[];  
+    grouped[a.type].push(a);  
+  });  
+  for(let type in grouped){  
+    homeAccounts.innerHTML+=`<h4 style="margin-top:15px;color:#1976d2">${type.toUpperCase()}</h4>`;  
+    grouped[type].forEach(acc=>{  
+      homeAccounts.innerHTML+=`<div style="margin-left:10px">${acc.name} – ₹${acc.amount}</div>`;  
+    });  
+  }  
+  netWorth.innerText="₹"+total;  
+}  
+  
+// ===== SETTINGS =====  
+function openSettings(){toggleMenu();settings.style.display="block"}  
+function resetApp(){  
+  if(confirm("Reset all data?")){localStorage.clear(); location.reload();}  
+}  
+  
+// INITIAL RENDER  
+renderHome();  
+renderTransactions();  
+renderAccounts();  
+</script>  <!-- Load Chart.js library -->  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>  <!-- Load custom chart logic -->  <script src="chart.js"></script>  <script src="charts.js"></script>  </body>  
+</html>
